@@ -3,6 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include <stdlib.h>
 #include <iostream>
+#include <time.h>
 
 using namespace cv;
 using namespace std;
@@ -35,6 +36,8 @@ int main(int argc, char** argv)
 			cout << "Camera was disconected";
 			break;
 		}
+		
+		cout << time(NULL) << endl;
 		
 		cvtColor(frame, bwFrame, CV_BGR2GRAY);
 		
