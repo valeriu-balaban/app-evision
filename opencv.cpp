@@ -4,19 +4,31 @@
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>
-#include <future>
+#include <pthread.h>
 
 using namespace cv;
 using namespace std;
 
-void gui(Mat frame); // thread
-
+Mat guiframe;
 bool running = 0;
+
+
+void *gui(void* unsused)
+{
+   	running = 1;
+	imshow("camera", guiframe);
+	cout << time(NULL) << endl;
+	running = 0;
+	pthread_exit(NULL);
+}
+
+
 
 int main(int argc, char** argv)
 {
     VideoCapture cap; // camera interface    
     Mat frame;
+    pthread_t gui_thread;
     
     // open default 0 device if no other device as first argument was passed
     if(argc > 1){
@@ -46,8 +58,8 @@ int main(int argc, char** argv)
 		cvtColor(frame, frame, CV_BGR2GRAY);
 		
 		if(!running){
-			cout << time(NULL) << endl;
-			async(launch::async, gui, frame);
+			guiframe = frame;
+			pthread_create(&gui_thread, NULL, gui, NULL);
 		}
 		
 		if(waitKey(30) >= 0) 
@@ -56,11 +68,4 @@ int main(int argc, char** argv)
 
     // the camera will be deinitialized automatically in VideoCapture destructor
     return 0;
-}
-
-void gui(Mat frame){
-	running = 1;
-	imshow("camera", frame);
-	cout << time(NULL) << endl;
-	running = 0;
 }
