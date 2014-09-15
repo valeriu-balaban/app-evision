@@ -1,21 +1,20 @@
-// arm-poky-linux-gnueabi-gcc -lopencv_video -lopencv_core -lopencv_highgui -lopencv_imgproc -lstdc++ -shared-libgcc opencv.cpp -o opencv
+// arm-poky-linux-gnueabi-gcc -lopencv_video -lopencv_core -lopencv_highgui -lopencv_imgproc -lstdc++ -std=c++11 -shared-libgcc opencv.cpp -o opencv
 
 #include <opencv2/opencv.hpp>
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>
-#include <thread>
+#include <future>
 
 using namespace cv;
 using namespace std;
 
-void gui(); // thread
+void gui(Mat frame); // thread
 
-Mat bwFrame;
+bool running = 0;
 
 int main(int argc, char** argv)
 {
-    thread gui_thread;
     VideoCapture cap; // camera interface    
     Mat frame;
     
@@ -36,7 +35,7 @@ int main(int argc, char** argv)
     }
     
     
-
+	namedWindow("camera",1);
     
     while(1) {
 		if( !cap.read(frame) ){
@@ -44,10 +43,12 @@ int main(int argc, char** argv)
 			break;
 		}
 		
-		cvtColor(frame, bwFrame, CV_BGR2GRAY);
+		cvtColor(frame, frame, CV_BGR2GRAY);
 		
-		if(!gui_thread.joinable())
-			gui_thread = thread(gui);		
+		if(!running){
+			cout << time(NULL) << endl;
+			async(launch::async, gui, frame);
+		}
 		
 		if(waitKey(30) >= 0) 
 			break;
@@ -57,14 +58,9 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void gui( ){
-	
-	// startup code
-	namedWindow("camera",1);
-	
-	//loop
-	while(1){
-		imshow("camera", bwFrame);
-		cout << time(NULL) << endl;
-	}
+void gui(Mat frame){
+	running = 1;
+	imshow("camera", frame);
+	cout << time(NULL) << endl;
+	running = 0;
 }
