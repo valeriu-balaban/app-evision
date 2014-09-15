@@ -4,13 +4,20 @@
 #include <stdlib.h>
 #include <iostream>
 #include <time.h>
+#include <thread>
 
 using namespace cv;
 using namespace std;
 
+void gui(); // thread
+
+Mat bwFrame;
+
 int main(int argc, char** argv)
 {
+    thread gui_thread;
     VideoCapture cap; // camera interface    
+    Mat frame;
     
     // open default 0 device if no other device as first argument was passed
     if(argc > 1){
@@ -27,26 +34,37 @@ int main(int argc, char** argv)
     	cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
     	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
     }
+    
+    
 
-    Mat frame, bwFrame;
-    namedWindow("camera",1);
     
     while(1) {
 		if( !cap.read(frame) ){
-			cout << "Camera was disconected";
+			cout << "Camera was disconected";			
 			break;
 		}
 		
-		cout << time(NULL) << endl;
-		
 		cvtColor(frame, bwFrame, CV_BGR2GRAY);
 		
-		imshow("camera", bwFrame);
-
+		if(!gui_thread.joinable())
+			gui_thread = thread(gui);		
+		
 		if(waitKey(30) >= 0) 
 			break;
 	}
 
     // the camera will be deinitialized automatically in VideoCapture destructor
     return 0;
+}
+
+void gui( ){
+	
+	// startup code
+	namedWindow("camera",1);
+	
+	//loop
+	while(1){
+		imshow("camera", bwFrame);
+		cout << time(NULL) << endl;
+	}
 }
