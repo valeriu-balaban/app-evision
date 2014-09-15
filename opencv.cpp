@@ -22,15 +22,23 @@ int main(int argc, char** argv)
     {
         cout << "Could not open default video device" << endl;
         return -1;
+    } else {
+    	cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
+    	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
     }
 
-    Mat frame;
+    Mat frame, bwFrame;
     namedWindow("camera",1);
     
     while(1) {
-		cap.read(frame);
-
-		imshow("camera", frame);
+		if( !cap.read(frame) ){
+			cout << "Camera was disconected";
+			break;
+		}
+		
+		cvtColor(frame, bwFrame, CV_BGR2GRAY);
+		
+		imshow("camera", bwFrame);
 
 		if(waitKey(30) >= 0) 
 			break;
