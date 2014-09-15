@@ -1,14 +1,23 @@
 // arm-poky-linux-gnueabi-gcc -lopencv_video -lopencv_core -lopencv_highgui -lopencv_imgproc -lstdc++ -shared-libgcc opencv.cpp -o opencv
 
 #include <opencv2/opencv.hpp>
+#include <stdlib.h>
 #include <iostream>
 
 using namespace cv;
 using namespace std;
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
-    VideoCapture cap(0); // open the default camera
+    VideoCapture cap; // camera interface    
+    
+    // open default 0 device if no other device as first argument was passed
+    if(argc > 1){
+    	cap.open(atoi(argv[1]));
+    } else {
+    	cap.open(0);
+    }
+    
     if(!cap.isOpened())  // check if we succeeded
     {
         cout << "Could not open default video device" << endl;
@@ -16,13 +25,16 @@ int main(int, char**)
     }
 
     Mat frame;
-    cap >> frame; // get a new frame from camera
-
-	vector<int> compression_params;
-    compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-    compression_params.push_back(9);
+    namedWindow("camera",1);
     
-    imwrite("test.png", frame, compression_params);
+    while(1) {
+		cap.read(frame);
+
+		imshow("camera", frame);
+
+		if(waitKey(30) >= 0) 
+			break;
+	}
 
     // the camera will be deinitialized automatically in VideoCapture destructor
     return 0;
