@@ -10,46 +10,25 @@ using namespace cv;
 using namespace std;
 
 Mat guiframe;
-bool running = 0;
+bool new_frame = 0;
 
 
 void *gui(void* unsused)
 {
-   	running = 1;
-	imshow("camera", guiframe);
-	cout << time(NULL) << endl;
-	running = 0;
-	pthread_exit(NULL);
-}
-
-
-
-int main(int argc, char** argv)
-{
-    VideoCapture cap; // camera interface    
+	VideoCapture cap(0); // camera interface    
     Mat frame;
-    pthread_t gui_thread;
-    
-    // open default 0 device if no other device as first argument was passed
-    if(argc > 1){
-    	cap.open(atoi(argv[1]));
-    } else {
-    	cap.open(0);
-    }
     
     if(!cap.isOpened())  // check if we succeeded
     {
         cout << "Could not open default video device" << endl;
-        return -1;
+        pthread_exit(NULL);
+        
     } else {
     	cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
     	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
     }
     
-    
-	namedWindow("camera",1);
-    
-    while(1) {
+   	while(1) {
 		if( !cap.read(frame) ){
 			cout << "Camera was disconected";			
 			break;
@@ -57,14 +36,36 @@ int main(int argc, char** argv)
 		
 		cvtColor(frame, frame, CV_BGR2GRAY);
 		
-		if(!running){
+		if(!new_frame){
 			guiframe = frame;
-			pthread_create(&gui_thread, NULL, gui, NULL);
+			new_frame = 1;
 		}
+	}
+	
+	pthread_exit(NULL);
+}
+
+
+
+int main(int argc, char** argv)
+{
+    pthread_t gui_thread;
+    
+	namedWindow("camera",1);
+	
+	pthread_create(&gui_thread, NULL, gui, NULL);
+    
+    while(1){
+    
+    	while(!new_frame){ } // loop
+    	
+		imshow("camera", guiframe);
+		cout << time(NULL) << endl;
+		new_frame = 0;
 		
 		if(waitKey(30) >= 0) 
-			break;
-	}
+			break;    
+    }
 
     // the camera will be deinitialized automatically in VideoCapture destructor
     return 0;
