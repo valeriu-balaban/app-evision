@@ -1,4 +1,4 @@
-// arm-poky-linux-gnueabi-gcc -lopencv_video -lopencv_core -lopencv_highgui -lopencv_imgproc -lstdc++ -lpthread -shared-libgcc opencv.cpp -o opencv
+// arm-poky-linux-gnueabi-gcc -lopencv_video -lopencv_core -lopencv_highgui -lopencv_imgproc -lstdc++ -lpthreads -shared-libgcc opencv.cpp -o opencv
 
 #include <opencv2/opencv.hpp>
 #include <stdlib.h>
