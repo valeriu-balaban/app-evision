@@ -5,6 +5,7 @@
 #include <iostream>
 #include <time.h>
 #include <pthread.h>
+#include "trace.h"
 
 using namespace cv;
 using namespace std;
@@ -33,6 +34,7 @@ void *gui(void* unsused)
 			cout << "Camera was disconected";			
 			break;
 		}
+		tracepoint(evision_processing, camera_new_frame);		
 		
 		cvtColor(frame, frame, CV_BGR2GRAY);
 		
