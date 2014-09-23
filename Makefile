@@ -1,5 +1,5 @@
 CC = arm-poky-linux-gnueabi-gcc
-CFLAGS = -g -Wall -shared-libgcc -I.
+CFLAGS = -g -Wall -std=c++11 -shared-libgcc -I.
 LIBS   = -lopencv_video -lopencv_core -lopencv_highgui \
 	 -lopencv_imgproc -lstdc++ -lpthread -llttng-ust \
 	 -ldl

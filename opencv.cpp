@@ -5,7 +5,9 @@
 #include <iostream>
 #include <time.h>
 #include <pthread.h>
+#include <unistd.h>
 #include "trace.h"
+#include "gpio.h"
 
 using namespace cv;
 using namespace std;
@@ -39,7 +41,8 @@ void *gui(void* unsused)
 		cvtColor(frame, frame, CV_BGR2GRAY);
 		
 		if(!new_frame){
-			guiframe = frame;
+			//guiframe = frame;
+			equalizeHist(frame, guiframe);
 			new_frame = 1;
 		}
 	}
@@ -47,16 +50,37 @@ void *gui(void* unsused)
 	pthread_exit(NULL);
 }
 
+void pin(char* value){
+	FILE *gpio;
+	
+	gpio = fopen("/sys/class/gpio/gpio101/value", "w");
+	fprintf(gpio,value);
+	fclose(gpio);
+}
+
+void *pwm(void *unsued){
+	GPIO p7(7,"out");
+
+	while(1){
+		p7.high();
+		usleep(10000);
+		p7.low();
+		usleep(10000);
+	}
+	
+	pthread_exit(NULL);
+}
 
 
 int main(int argc, char** argv)
 {
-    pthread_t gui_thread;
+    pthread_t gui_thread, pwm_thread;
     
 	namedWindow("camera",1);
 	
 	pthread_create(&gui_thread, NULL, gui, NULL);
     
+	pthread_create(&pwm_thread, NULL, pwm, NULL);
     while(1){
     
     	while(!new_frame){ } // loop
