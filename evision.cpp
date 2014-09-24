@@ -70,7 +70,8 @@ int main(int argc, char** argv)
 
 void send_frame_to_gui(cv::Mat &frame, int step){
 	if((new_frame == 0) && (step == settings_show_step)){
-		cv::pyrUp(frame, guiframe);			
+		//cv::pyrUp(frame, guiframe);			
+		guiframe = frame;
 		new_frame = 1;
 	}
 }
