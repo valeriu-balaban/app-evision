@@ -84,20 +84,23 @@ public:
 		std::vector<Event>::iterator i;	
 		long total_min = 0, total_max = 0, total_avg = 0;	
 		
-		std::cout << std::setw(20) << "Event Name";
-		std::cout << std::setw(15) << "Min Time [us]";
-		std::cout << std::setw(15) << "Max Time [us]";
-		std::cout << std::setw(15) << "Avg Time [us]";
+		std::cout << std::setfill('-') << std::setw(73) << "-" << std::endl;
+		std::cout << std::setfill(' ');
+		
+		std::cout << std::setw(20) << "Event Name" << " |";
+		std::cout << std::setw(15) << "Min Time [us]" << " |";
+		std::cout << std::setw(15) << "Max Time [us]" << " |";
+		std::cout << std::setw(15) << "Avg Time [us]" << " |";
 		std::cout << std::endl;
 		
-		std::cout << std::setfill('-') << std::setw(69) << "-" << std::endl;
+		std::cout << std::setfill('-') << std::setw(73) << "-" << std::endl;
 		std::cout << std::setfill(' ');
 		
 		for (i = event_list.begin(); i != event_list.end(); ++i){
-			std::cout << std::setw(20) << i->name;
-			std::cout << std::setw(15) << i->min / 1000;
-			std::cout << std::setw(15) << i->max / 1000;
-			std::cout << std::setw(15) << (i->total / i->count) / 1000;
+			std::cout << std::setw(20) << i->name << " |";
+			std::cout << std::setw(15) << i->min / 1000 << " |";
+			std::cout << std::setw(15) << i->max / 1000 << " |";
+			std::cout << std::setw(15) << (i->total / i->count) / 1000 << " |";
 			std::cout << std::endl;
 			
 			total_min += i->min / 1000;
@@ -105,13 +108,15 @@ public:
 			total_avg += (i->total / i->count) / 1000; 			
 		}
 		
-		std::cout << std::setfill('-') << std::setw(69) << "-" << std::endl;
+		std::cout << std::setfill('-') << std::setw(73) << "-" << std::endl;
 		std::cout << std::setfill(' ');
-		std::cout << std::setw(20) << "Total";
-		std::cout << std::setw(15) << total_min;
-		std::cout << std::setw(15) << total_max;
-		std::cout << std::setw(15) << total_avg;
+		std::cout << std::setw(20) << "Total" << " |";
+		std::cout << std::setw(15) << total_min << " |";
+		std::cout << std::setw(15) << total_max << " |";
+		std::cout << std::setw(15) << total_avg << " |";
 		std::cout << std::endl;
+		std::cout << std::setfill('-') << std::setw(73) << "-" << std::endl;
+		std::cout << std::setfill(' ');
 	}
 
 };

@@ -28,18 +28,23 @@ char main_window_name[] = "Team eVision :: Lightning Asystant";
 int show_step = 0;
 Tracer	processing_tracer;
 
+pthread_mutex_t current_frame = PTHREAD_MUTEX_INITIALIZER;
+
 
 void send_frame_to_gui(Mat &frame, int step){
-	if((!new_frame) && (step == show_step)){
+	if((new_frame == 0) && (step == show_step)){
+		pthread_mutex_lock(&current_frame);
 		guiframe = frame;			
 		new_frame = 1;
+		pthread_mutex_unlock(&current_frame);
+
 	}
 }
 
 void *processing_thread_function(void* unsused)
 {
 	VideoCapture 	cap(0); // camera interface    
-    Mat 			frame;
+    Mat 			cam_frame, bw_frame, blur_frame, contrast_frame, canny_frame;
     
     
     if(!cap.isOpened())  // check if we succeeded
@@ -53,33 +58,33 @@ void *processing_thread_function(void* unsused)
     }
     
    	while(1) {
-		if( !cap.read(frame) ){
+		if( !cap.read(cam_frame) ){
 			cout << "Camera was disconected";			
 			break;
 		}		
 		
-		send_frame_to_gui(frame, SENSOR_IMAGE);
+		send_frame_to_gui(cam_frame, SENSOR_IMAGE);
 		processing_tracer.start();
 		
 		// All processing are done on gray image 
-		cvtColor(frame, frame, CV_BGR2GRAY);
+		cvtColor(cam_frame, bw_frame, CV_BGR2GRAY);
 		processing_tracer.event("Convert to Gray");
-		send_frame_to_gui(frame, GRAY_IMAGE);
+		send_frame_to_gui(bw_frame, GRAY_IMAGE);
 		
 		// Apply a special blur filter which preserves edges
-		medianBlur(frame, frame, 7);
+		medianBlur(bw_frame, blur_frame, 7);
 		processing_tracer.event("Median blur");
-		send_frame_to_gui(frame, BLUR_IMAGE);
+		send_frame_to_gui(blur_frame, BLUR_IMAGE);
 		
 		// Increase contrast by distributing color histogram to contain all values
-		equalizeHist(frame, frame);
+		equalizeHist(blur_frame, contrast_frame);
 		processing_tracer.event("Equalize histogram");
-		send_frame_to_gui(frame, CONTRAST_IMAGE);
+		send_frame_to_gui(contrast_frame, CONTRAST_IMAGE);
 		
 		// detect edges using histeresys
-		Canny(frame, frame, 30, 100);
+		Canny(contrast_frame, canny_frame, 30, 100);
 		processing_tracer.event("Edge detection");
-		send_frame_to_gui(frame, CANNY_IMAGE);
+		send_frame_to_gui(canny_frame, CANNY_IMAGE);
 	}
 	
 	pthread_exit(NULL);
@@ -116,9 +121,11 @@ int main(int argc, char** argv)
     
     	while(!new_frame){ } // loop
     	
+    	pthread_mutex_lock(&current_frame);
 		imshow(main_window_name, guiframe);
 		cout << time(NULL) << endl;
 		new_frame = 0;
+		pthread_mutex_unlock(&current_frame);
 		
 		if(waitKey(30) >= 0) {
 			
