@@ -30,7 +30,7 @@ Tracer	processing_tracer;
 
 
 void send_frame_to_gui(Mat &frame, int step){
-	if(!new_frame && step == show_step){
+	if((!new_frame) && (step == show_step)){
 		guiframe = frame;			
 		new_frame = 1;
 	}

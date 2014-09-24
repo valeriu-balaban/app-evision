@@ -13,11 +13,11 @@ class Tracer{
 
 	// Private struct
 	struct Event{
-		string 	name;
-		clock_t	min;
-		clock_t	max;
-		clock_t	total;
-		long	count;
+		string 		name;
+		long long	min;
+		long long	max;
+		long long	total;
+		long		count;
 	};
 	
 	// Private variables
@@ -25,8 +25,6 @@ class Tracer{
 	timespec			start_time;
 	
 public:
-	
-	Tracer():event_list(0) { };
 	
 	void start(){
 		clock_gettime(TRACER_CLOCK, &start_time);
