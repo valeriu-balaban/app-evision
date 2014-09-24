@@ -1,11 +1,11 @@
+#ifndef TRACER_H
+#define TRACER_H
+
 #include <iostream>
 #include <vector>
 #include <string>
 #include <iomanip>
 #include <time.h>
-
-#ifndef TRACER_H
-#define TRACER_H
 
 #define TRACER_CLOCK	CLOCK_THREAD_CPUTIME_ID
 
@@ -13,7 +13,7 @@ class Tracer{
 
 	// Private struct
 	struct Event{
-		string 		name;
+		std::string name;
 		long long	min;
 		long long	max;
 		long long	total;
@@ -26,11 +26,13 @@ class Tracer{
 	
 public:
 	
+	Tracer():event_list(0){};
+	
 	void start(){
 		clock_gettime(TRACER_CLOCK, &start_time);
 	}
 	
-	void event(string name){
+	void event(std::string name){
 		std::vector<Event>::iterator i;
 		timespec event_time;
 		long elapsed_time;
@@ -87,6 +89,7 @@ public:
 		std::cout << std::setfill('-') << std::setw(73) << "-" << std::endl;
 		std::cout << std::setfill(' ');
 		
+		std::cout << "|" ;
 		std::cout << std::setw(20) << "Event Name" << " |";
 		std::cout << std::setw(15) << "Min Time [us]" << " |";
 		std::cout << std::setw(15) << "Max Time [us]" << " |";
@@ -97,6 +100,7 @@ public:
 		std::cout << std::setfill(' ');
 		
 		for (i = event_list.begin(); i != event_list.end(); ++i){
+			std::cout << "|" ;
 			std::cout << std::setw(20) << i->name << " |";
 			std::cout << std::setw(15) << i->min / 1000 << " |";
 			std::cout << std::setw(15) << i->max / 1000 << " |";
@@ -110,6 +114,7 @@ public:
 		
 		std::cout << std::setfill('-') << std::setw(73) << "-" << std::endl;
 		std::cout << std::setfill(' ');
+		std::cout << "|" ;
 		std::cout << std::setw(20) << "Total" << " |";
 		std::cout << std::setw(15) << total_min << " |";
 		std::cout << std::setw(15) << total_max << " |";

@@ -1,99 +1,140 @@
 // arm-poky-linux-gnueabi-gcc -lopencv_video -lopencv_core -lopencv_highgui -lopencv_imgproc -lstdc++ -lpthread -shared-libgcc opencv.cpp -o opencv
 
-#include <opencv2/opencv.hpp>
-#include <stdlib.h>
-#include <iostream>
-#include <time.h>
-#include <pthread.h>
-#include <unistd.h>
-#include "gpio.h"
+#include "evision.h"
 #include "tracer.h"
+#include "gpio.h"
 
-using namespace cv;
-using namespace std;
-
-enum Processing_Step{
-	SENSOR_IMAGE,
-	GRAY_IMAGE,
-	BLUR_IMAGE,
-	CONTRAST_IMAGE,
-	CANNY_IMAGE,
-	LAST_STEP
-};
 
 // Global variables
-Mat guiframe;
+
+// GUI globals
+cv::Mat guiframe;
 bool new_frame = false;
-char main_window_name[] = "Team eVision :: Lightning Asystant";
-int show_step = 0;
-Tracer	processing_tracer;
+bool running = true;
 
-pthread_mutex_t current_frame = PTHREAD_MUTEX_INITIALIZER;
+// Window titles
+char main_window_name[] = "Lightning Asystant :: Team eVision";
+char settings_window_name[] = "Settings :: Team eVision";
 
+// Settings variables
+int settings_show_step = 0;
+int settings_contrast = 0;
+int settings_blur = 1;
 
-void send_frame_to_gui(Mat &frame, int step){
-	if((new_frame == 0) && (step == show_step)){
-		pthread_mutex_lock(&current_frame);
-		guiframe = frame;			
+int main(int argc, char** argv)
+{
+    pthread_t processing_thread, pwm_thread;
+    long time_old;
+    int fps_counter = 0;
+    
+    // GUI setup
+	cv::namedWindow(main_window_name);
+	
+	// Setup window
+	cv::namedWindow(settings_window_name);
+	cv::createTrackbar("Show Step", settings_window_name, &settings_show_step, LAST_STEP-1);
+	cv::createTrackbar("Contrast    ", settings_window_name, &settings_contrast, 1);
+	cv::createTrackbar("Mean Blur  ", settings_window_name, &settings_blur, 1);
+	
+	pthread_create(&processing_thread, NULL, processing_thread_function, NULL);    
+	//pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
+	
+	
+    while(running){
+    
+    	while(!new_frame){ } // loop
+    	
+		cv::imshow(main_window_name, guiframe);
+		
+		// calculate fps
+		if(time(NULL) != time_old){
+			add_info(fps_counter);
+			fps_counter = 1;
+			time_old = time(NULL);
+		} else {
+			fps_counter++;
+		}
+		
+		new_frame = 0;
+		
+		if(cv::waitKey(30) >= 0) {
+			running = false;
+		} 
+    }
+	
+	pthread_join(processing_thread, NULL);
+	
+    // the camera will be deinitialized automatically in VideoCapture destructor
+    return 0;
+}
+
+void send_frame_to_gui(cv::Mat &frame, int step){
+	if((new_frame == 0) && (step == settings_show_step)){
+		cv::pyrUp(frame, guiframe);			
 		new_frame = 1;
-		pthread_mutex_unlock(&current_frame);
-
 	}
 }
 
 void *processing_thread_function(void* unsused)
 {
-	VideoCapture 	cap(0); // camera interface    
-    Mat 			cam_frame, bw_frame, blur_frame, contrast_frame, canny_frame;
-    
+	cv::VideoCapture 	cap(0); // camera interface    
+    cv::Mat 			frame, cam_frame, bw_frame, blur_frame, contrast_frame, canny_frame;
+    Tracer				processing_tracer;
     
     if(!cap.isOpened())  // check if we succeeded
     {
-        cout << "Could not open default video device" << endl;
+        std::cout << "Could not open default video device" << std::endl;
         pthread_exit(NULL);
         
-    } else {
-    	cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
-    	cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
-    }
-    
-   	while(1) {
-		if( !cap.read(cam_frame) ){
-			cout << "Camera was disconected";			
+    } 
+        
+   	while(running) {
+		if( !cap.read(frame) ){
+			std::cout << "Camera was disconected";			
 			break;
 		}		
 		
+		cv::pyrDown(frame, cam_frame);
 		send_frame_to_gui(cam_frame, SENSOR_IMAGE);
 		processing_tracer.start();
 		
 		// All processing are done on gray image 
-		cvtColor(cam_frame, bw_frame, CV_BGR2GRAY);
+		cv::cvtColor(cam_frame, bw_frame, CV_BGR2GRAY);
 		processing_tracer.event("Convert to Gray");
 		send_frame_to_gui(bw_frame, GRAY_IMAGE);
 		
-		// Apply a special blur filter which preserves edges
-		medianBlur(bw_frame, blur_frame, 7);
-		processing_tracer.event("Median blur");
-		send_frame_to_gui(blur_frame, BLUR_IMAGE);
-		
 		// Increase contrast by distributing color histogram to contain all values
-		equalizeHist(blur_frame, contrast_frame);
+		if(settings_contrast){
+			cv::equalizeHist(bw_frame, contrast_frame);
+		} else {
+			contrast_frame = bw_frame;
+		}
 		processing_tracer.event("Equalize histogram");
 		send_frame_to_gui(contrast_frame, CONTRAST_IMAGE);
 		
+		// Apply a special blur filter which preserves edges
+		if(settings_blur){
+			cv::medianBlur(contrast_frame, blur_frame, 7);
+		} else {
+			blur_frame = contrast_frame;
+		}
+		processing_tracer.event("Median blur");
+		send_frame_to_gui(blur_frame, BLUR_IMAGE);
+		
 		// detect edges using histeresys
-		Canny(contrast_frame, canny_frame, 30, 100);
+		cv::Canny(contrast_frame, canny_frame, 30, 100);
 		processing_tracer.event("Edge detection");
 		send_frame_to_gui(canny_frame, CANNY_IMAGE);
 	}
 	
+	processing_tracer.end();
 	pthread_exit(NULL);
 }
 
 void *pwm_thread_function(void *unsued){
 	GPIO p7(7,"out");
 
-	while(1){
+	while(running){
 		p7.high();
 		usleep(10000);
 		p7.low();
@@ -103,38 +144,12 @@ void *pwm_thread_function(void *unsued){
 	pthread_exit(NULL);
 }
 
+void add_info(int fps){
+	// white canvas
+	cv::Mat img_info (25, 320, CV_8UC3, cv::Scalar(255, 255, 255));
 
-int main(int argc, char** argv)
-{
-    pthread_t processing_thread, pwm_thread;
-    
-    
-    // GUI setup
-	namedWindow(main_window_name);
-	createTrackbar("Show Step", main_window_name, &show_step, LAST_STEP-1);
-	
-	pthread_create(&processing_thread, NULL, processing_thread_function, NULL);    
-	//pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
-	
-	
-    while(1){
-    
-    	while(!new_frame){ } // loop
-    	
-    	pthread_mutex_lock(&current_frame);
-		imshow(main_window_name, guiframe);
-		cout << time(NULL) << endl;
-		new_frame = 0;
-		pthread_mutex_unlock(&current_frame);
-		
-		if(waitKey(30) >= 0) {
+	cv::putText(img_info, std::string("FPS: ") + std::to_string(fps), cv::Point(5, 20), 
+			cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cv::Scalar(0,0,255), 1, CV_AA);
 			
-			break;   
-		} 
-    }
-	
-	processing_tracer.end();
-
-    // the camera will be deinitialized automatically in VideoCapture destructor
-    return 0;
+	cv::imshow(settings_window_name, img_info);	
 }
