@@ -7,6 +7,8 @@
 #ifndef TRACER_H
 #define TRACER_H
 
+#define TRACER_CLOCK	CLOCK_THREAD_CPUTIME_ID
+
 class Tracer{
 
 	// Private struct
@@ -27,7 +29,7 @@ public:
 	Tracer():event_list(0) { };
 	
 	void start(){
-		clock_gettime(CLOCK_MONOTONIC, &start_time);
+		clock_gettime(TRACER_CLOCK, &start_time);
 	}
 	
 	void event(string name){
@@ -35,7 +37,7 @@ public:
 		timespec event_time;
 		long elapsed_time;
 		
-		clock_gettime(CLOCK_MONOTONIC, &event_time);
+		clock_gettime(TRACER_CLOCK, &event_time);
 		
 		if(event_time.tv_nsec < start_time.tv_nsec){
 			// wrong returned time
@@ -49,11 +51,11 @@ public:
 		    if (i->name == name) {
 		        
 		        // update values
-		        if(i->min > event_time.tv_nsec - start_time.tv_nsec){
+		        if(i->min > elapsed_time){
 		        	i->min 	= elapsed_time;
 		        }
 		        
-		        if(i->max < event_time.tv_nsec - start_time.tv_nsec){
+		        if(i->max < elapsed_time){
 		        	i->max 	= elapsed_time;
 		        }
 		        
@@ -77,7 +79,7 @@ public:
 			event_list.insert(event_list.end(), new_event);
 		}
 		
-		clock_gettime(CLOCK_MONOTONIC, &start_time);
+		clock_gettime(TRACER_CLOCK, &start_time);
 	}
 	
 	void end(){
