@@ -20,21 +20,24 @@ char settings_window_name[] = "Settings :: Team eVision";
 int settings_show_step = 0;
 int settings_contrast = 0;
 int settings_blur = 1;
+int settings_threshold = 128;
 
 int main(int argc, char** argv)
 {
     pthread_t processing_thread, pwm_thread;
     long time_old;
     int fps_counter = 0;
+    int gui_key;
     
     // GUI setup
 	cv::namedWindow(main_window_name);
 	
 	// Setup window
 	cv::namedWindow(settings_window_name);
-	cv::createTrackbar("Show Step", settings_window_name, &settings_show_step, LAST_STEP-1);
+	cv::createTrackbar("Show Step   ", settings_window_name, &settings_show_step, LAST_STEP-1);
 	cv::createTrackbar("Contrast    ", settings_window_name, &settings_contrast, 1);
-	cv::createTrackbar("Mean Blur  ", settings_window_name, &settings_blur, 1);
+	cv::createTrackbar("Mean Blur   ", settings_window_name, &settings_blur, 1);
+	cv::createTrackbar("Threshold   ", settings_window_name, &settings_threshold, 255);
 	
 	pthread_create(&processing_thread, NULL, processing_thread_function, NULL);    
 	//pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
@@ -57,8 +60,16 @@ int main(int argc, char** argv)
 		
 		new_frame = 0;
 		
-		if(cv::waitKey(30) >= 0) {
-			running = false;
+		gui_key = cv::waitKey(5);
+		if(gui_key >= 0) {
+			gui_key %= 0xFF;
+			
+			// ESC
+			if(gui_key == 43){
+				running = false;
+			} else {
+				std::cout << gui_key << std::endl;
+			}
 		} 
     }
 	
@@ -79,7 +90,8 @@ void send_frame_to_gui(cv::Mat &frame, int step){
 void *processing_thread_function(void* unsused)
 {
 	cv::VideoCapture 	cap(0); // camera interface    
-    cv::Mat 			frame, cam_frame, bw_frame, blur_frame, contrast_frame, canny_frame;
+    cv::Mat 			frame, cam_frame, bw_frame, blur_frame, contrast_frame;
+    cv::Mat				threshold_frame, canny_frame, contour_frame;
     Tracer				processing_tracer;
     
     if(!cap.isOpened())  // check if we succeeded
@@ -126,6 +138,19 @@ void *processing_thread_function(void* unsused)
 		cv::Canny(contrast_frame, canny_frame, 30, 100);
 		processing_tracer.event("Edge detection");
 		send_frame_to_gui(canny_frame, CANNY_IMAGE);
+		
+		// Apply threshhold
+		threshold(blur_frame, threshold_frame, settings_threshold, 255, CV_THRESH_BINARY);
+		processing_tracer.event("Appling threshold");
+		send_frame_to_gui(threshold_frame, THRESHOLD_IMAGE);
+		
+		// detect and paint contours
+		std::vector<std::vector<cv::Point>> contours;
+		cv::findContours(threshold_frame, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+		contour_frame = blur_frame;
+		cv::drawContours(bw_frame, contours, -1, cv::Scalar(0), 2); 
+		processing_tracer.event("Contour detection");
+		send_frame_to_gui(contour_frame, CONTOUR_IMAGE);
 	}
 	
 	processing_tracer.end();
