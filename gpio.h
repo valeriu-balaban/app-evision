@@ -11,7 +11,8 @@ class GPIO {
 	
 	bool is_enabled;
 	std::string sys_interface;
-	
+	std::ofstream sys_file; 
+
 public:
 	
 	GPIO(const unsigned int port, const std::string direction): is_enabled(false){
@@ -80,15 +81,14 @@ public:
 	}
 	
 	void set(bool state){
-	
-		std::ofstream sys_file;
-		
+
 		if(is_enabled){
-		
-			sys_file.open(sys_interface + "value");
+			if(!sys_file.is_open())
+				sys_file.open(sys_interface + "value");
+
 			if(sys_file.is_open()) {
 				sys_file << int(state) << std::endl;
-				sys_file.close();
+				sys_file.flush();
 		
 			} else {
 				std::cout << "ERROR: GPIO could not set value for " << sys_interface << std::endl;
