@@ -40,11 +40,11 @@ int main(int argc, char** argv)
 	cv::createTrackbar("Contrast    ", settings_window_name, &settings_contrast, 1);
 	cv::createTrackbar("Mean Blur   ", settings_window_name, &settings_blur, 1);
 	cv::createTrackbar("Threshold   ", settings_window_name, &settings_threshold, 255);
-	cv::createTrackbar("Servo Right ", settings_window_name, &pwm_right, 20000);
-	cv::createTrackbar("Servo Left  ", settings_window_name, &pwm_left, 20000);
+	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 20000);
+	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 20000);
 	
 	pthread_create(&processing_thread, NULL, processing_thread_function, NULL);    
-	//pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
+	pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
 	
 	
     while(running){
