@@ -87,6 +87,10 @@ void send_frame_to_gui(cv::Mat &frame, int step){
 	}
 }
 
+bool contour_area(std::vector<cv::Point> a, std::vector<cv::Point> b){
+	return cv::contourArea(a) > cv::contourArea(b);
+}
+
 void *processing_thread_function(void* unsused)
 {
 	cv::VideoCapture 	cap(0); // camera interface    
@@ -145,12 +149,22 @@ void *processing_thread_function(void* unsused)
 		send_frame_to_gui(threshold_frame, THRESHOLD_IMAGE);
 		
 		// detect and paint contours
-		std::vector<std::vector<cv::Point>> contours;
-		cv::findContours(threshold_frame, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+		
+		std::vector<std::vector<cv::Point>> contours, road(1);
+		std::vector<cv::Vec4i> hierarchy;
 		contour_frame = blur_frame;
-		cv::drawContours(bw_frame, contours, -1, cv::Scalar(0), 2); 
+		
+		cv::findContours(threshold_frame, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);		
+		if(contours.size()){
+			std::sort(contours.begin(), contours.end(), contour_area);
+			cv::approxPolyDP(cv::Mat(contours[0]), road[0], 20, true);			
+			cv::drawContours(cam_frame, road, -1, cv::Scalar(0, 255 ,0), 2);
+			
+			cv::approxPolyDP(cv::Mat(contours[1]), road[0], 20, true);			
+			cv::drawContours(cam_frame, road, -1, cv::Scalar(255, 0, 0), 2);	 	
+		}
 		processing_tracer.event("Contour detection");
-		send_frame_to_gui(contour_frame, CONTOUR_IMAGE);
+		send_frame_to_gui(cam_frame, CONTOUR_IMAGE);
 	}
 	
 	processing_tracer.end();
