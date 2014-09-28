@@ -31,6 +31,15 @@ int main(int argc, char** argv)
     int fps_counter = 0;
     int gui_key;
     
+	// for cpu affinity
+	cpu_set_t cpuset; 
+	int cpu = 0;
+	
+	CPU_ZERO(&cpuset);       //clears the cpuset
+	CPU_SET( cpu , &cpuset); //set CPU 2 on cpuset
+	sched_setaffinity(0, sizeof(cpuset), &cpuset);
+    
+    
     // GUI setup
 	cv::namedWindow(main_window_name);
 	
@@ -101,6 +110,13 @@ void *processing_thread_function(void* unsused)
     cv::Mat 			frame, cam_frame, bw_frame, blur_frame, contrast_frame;
     cv::Mat				threshold_frame, canny_frame, contour_frame;
     Tracer				processing_tracer;
+    // for cpu affinity
+	cpu_set_t cpuset; 
+	int cpu = 1;
+	
+	CPU_ZERO(&cpuset);       //clears the cpuset
+	CPU_SET( cpu , &cpuset); //set CPU 2 on cpuset
+	sched_setaffinity(0, sizeof(cpuset), &cpuset);
     
     if(!cap.isOpened())  // check if we succeeded
     {
@@ -178,6 +194,14 @@ void *processing_thread_function(void* unsused)
 void *pwm_thread_function(void *unused){
 	
 	int h_r, h_l, ret;
+	
+	// for cpu affinity
+	cpu_set_t cpuset; 
+	int cpu = 2;
+	
+	CPU_ZERO(&cpuset);       //clears the cpuset
+	CPU_SET( cpu , &cpuset); //set CPU 2 on cpuset
+	sched_setaffinity(0, sizeof(cpuset), &cpuset);
 	
 	//source: http://www.yonch.com/tech/82-linux-thread-priority
 	// We'll operate on the currently running thread.
