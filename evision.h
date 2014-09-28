@@ -7,6 +7,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <sched.h>
 
 enum Processing_Step{
 	SENSOR_IMAGE,
