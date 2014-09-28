@@ -163,25 +163,24 @@ void *processing_thread_function(void* unsused)
 
 void *pwm_thread_function(void *unused){
 	
+	int h_r, h_l;
+	
 	while(running){
-		int h_r = high_right, h_l = high_left; //local var
-		int delay1 = h_r > h_l ? h_l : h_r;
-		int delay2 = h_r > h_l ? h_r-h_l : h_l-h_r;
-		int delay3 = period - h_r - h_l;
-
+		h_r = high_right, h_l = high_left;
+		
 		pwm_right.high();
 		pwm_left.high();
-		usleep(delay1);
+		usleep(std::min(h_r, h_l));
 		if(h_r > h_l)
 			pwm_left.low();
 		else 
 			pwm_right.low();
-		usleep(delay2);
+		usleep(abs(h_r - h_l));
 		if(h_r > h_l)
 			pwm_right.low();
 		else
 			pwm_left.low();
-		usleep(delay3);
+		usleep(period - std::max(h_r, h_l));
 	}
 	
 	pthread_exit(NULL);
