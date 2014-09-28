@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 20000);
 	
 	pthread_create(&processing_thread, NULL, processing_thread_function, NULL);    
-	pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
+	//pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
 	
 	
     while(running){
