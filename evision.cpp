@@ -7,7 +7,7 @@
 
 // Global variables
 GPIO pwm_right(4, "out"), pwm_left(7, "out");
-int high_right = 0, high_left = 0, period = 20000; //PWM high time in us
+int high_right = 600, high_left = 600, period = 20000; //PWM high time in us
 
 // GUI globals
 cv::Mat guiframe;
@@ -39,6 +39,8 @@ int main(int argc, char** argv)
 	CPU_SET( cpu , &cpuset); //set CPU 2 on cpuset
 	sched_setaffinity(0, sizeof(cpuset), &cpuset);
     
+    // process priority
+    setpriority(PRIO_PROCESS, 0, -20);
     
     // GUI setup
 	cv::namedWindow(main_window_name);
@@ -49,8 +51,8 @@ int main(int argc, char** argv)
 	cv::createTrackbar("Contrast    ", settings_window_name, &settings_contrast, 1);
 	cv::createTrackbar("Mean Blur   ", settings_window_name, &settings_blur, 1);
 	cv::createTrackbar("Threshold   ", settings_window_name, &settings_threshold, 255);
-	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 20000);
-	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 20000);
+	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 3000);
+	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 3000);
 	
 	pthread_create(&processing_thread, NULL, processing_thread_function, NULL);    
 	//pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
@@ -78,7 +80,7 @@ int main(int argc, char** argv)
 			gui_key %= 0xFF;
 			
 			// ESC
-			if(gui_key == 43){
+			if((gui_key == 43) || (gui_key == 27)){
 				running = false;
 			} else {
 				std::cout << gui_key << std::endl;
@@ -175,7 +177,7 @@ void *processing_thread_function(void* unsused)
 		contour_frame = blur_frame;
 		
 		cv::findContours(threshold_frame, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);		
-		if(contours.size()){
+		if(contours.size() > 1){
 			std::sort(contours.begin(), contours.end(), contour_area);
 			cv::approxPolyDP(cv::Mat(contours[0]), road[0], 20, true);			
 			cv::drawContours(cam_frame, road, -1, cv::Scalar(0, 255 ,0), 2);
