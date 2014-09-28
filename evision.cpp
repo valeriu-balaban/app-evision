@@ -177,7 +177,7 @@ void *processing_thread_function(void* unsused)
 
 void *pwm_thread_function(void *unused){
 	
-	int h_r, h_l;
+	int h_r, h_l, ret;
 	
 	//source: http://www.yonch.com/tech/82-linux-thread-priority
 	// We'll operate on the currently running thread.
@@ -193,7 +193,7 @@ void *pwm_thread_function(void *unused){
 	if (ret != 0) {
     	// Print the error
     	std::cout << "Unsuccessful in setting thread realtime prio" << std::endl;
-    	return;
+    	pthread_exit(NULL);
 	}
 
 	while(running){
