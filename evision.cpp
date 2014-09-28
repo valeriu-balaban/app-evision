@@ -6,6 +6,8 @@
 
 
 // Global variables
+GPIO pwm_right(4, "out"), pwm_left(7, "out");
+int high_right = 0, high_left = 0, period = 20000; //PWM high time in us
 
 // GUI globals
 cv::Mat guiframe;
@@ -38,9 +40,11 @@ int main(int argc, char** argv)
 	cv::createTrackbar("Contrast    ", settings_window_name, &settings_contrast, 1);
 	cv::createTrackbar("Mean Blur   ", settings_window_name, &settings_blur, 1);
 	cv::createTrackbar("Threshold   ", settings_window_name, &settings_threshold, 255);
+	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 20000);
+	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 20000);
 	
 	pthread_create(&processing_thread, NULL, processing_thread_function, NULL);    
-	//pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
+	pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
 	
 	
     while(running){
@@ -171,14 +175,43 @@ void *processing_thread_function(void* unsused)
 	pthread_exit(NULL);
 }
 
-void *pwm_thread_function(void *unsued){
-	GPIO p7(7,"out");
+void *pwm_thread_function(void *unused){
+	
+	int h_r, h_l;
+	
+	//source: http://www.yonch.com/tech/82-linux-thread-priority
+	// We'll operate on the currently running thread.
+    pthread_t this_thread = pthread_self();
+    // struct sched_param is used to store the scheduling priority
+	struct sched_param params;
+	// We'll set the priority to the maximum.
+	params.sched_priority = sched_get_priority_max(SCHED_FIFO);
+	std::cout << "Trying to set thread realtime prio = " << params.sched_priority << std::endl;
+ 
+	// Attempt to set thread real-time priority to the SCHED_FIFO policy
+	ret = pthread_setschedparam(this_thread, SCHED_FIFO, &params);
+	if (ret != 0) {
+    	// Print the error
+    	std::cout << "Unsuccessful in setting thread realtime prio" << std::endl;
+    	return;
+	}
 
 	while(running){
-		p7.high();
-		usleep(10000);
-		p7.low();
-		usleep(10000);
+		h_r = high_right, h_l = high_left;
+		
+		pwm_right.high();
+		pwm_left.high();
+		usleep(std::min(h_r, h_l));
+		if(h_r > h_l)
+			pwm_left.low();
+		else 
+			pwm_right.low();
+		usleep(abs(h_r - h_l));
+		if(h_r > h_l)
+			pwm_right.low();
+		else
+			pwm_left.low();
+		usleep(period - std::max(h_r, h_l));
 	}
 	
 	pthread_exit(NULL);
