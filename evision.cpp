@@ -204,21 +204,22 @@ void *processing_thread_function(void* unsused)
 	pthread_exit(NULL);
 }
 
-	void pwm_control(int h_r, int h_l){
-	
-		pwm_right.high();
-		pwm_left.high();
-		usleep(std::min(h_r, h_l));
-		if(h_r > h_l)
-			pwm_left.low();
-		else 
-			pwm_right.low();
-		usleep(abs(h_r - h_l));
-		if(h_r > h_l)
-			pwm_right.low();
-		else
-			pwm_left.low();
-		usleep(period - std::max(h_r, h_l));
+	void pwm_control(int h_r, int h_l){	
+		for(int i = 0; i < 2; i++){
+			pwm_right.high();
+			pwm_left.high();
+			usleep(std::min(h_r, h_l));
+			if(h_r > h_l)
+				pwm_left.low();
+			else 
+				pwm_right.low();
+			usleep(abs(h_r - h_l));
+			if(h_r > h_l)
+				pwm_right.low();
+			else
+				pwm_left.low();
+			usleep(period - std::max(h_r, h_l));
+		}
 	}
 
 void add_info(int fps){
