@@ -6,7 +6,8 @@
 
 
 // Global variables
-GPIO pwm_right(4, "out"), pwm_left(7, "out");
+GPIO pwm_right(4, "out"), pwm_left(7, "out"), led_right(2 , "out");
+GPIO led_left(1, "out"), led_R(5, "out"), start(0 ,"out");
 int high_right = 600, high_left = 600, period = 20000; //PWM high time in us
 
 // GUI globals
@@ -85,6 +86,16 @@ int main(int argc, char** argv)
 			// ESC
 			if((gui_key == 43) || (gui_key == 27)){
 				running = false;
+			} else if(gui_key == 49) {
+				led_right.toggle();
+			} else if(gui_key == 50) {
+				led_left.toggle();
+			} else if(gui_key == 51) {
+				led_R.toggle();
+			} else if(gui_key == 52) {
+				start.high();
+				usleep(10000);
+				start.low();
 			} else {
 				std::cout << gui_key << std::endl;
 			}
