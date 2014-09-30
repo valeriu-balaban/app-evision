@@ -24,6 +24,9 @@ int settings_contrast = 0;
 int settings_blur = 1;
 int settings_threshold = 128;
 
+//Functions declaration
+void pwm_control(int, int);
+
 int main(int argc, char** argv)
 {
     pthread_t processing_thread, pwm_thread;
@@ -115,6 +118,7 @@ void *processing_thread_function(void* unsused)
     // for cpu affinity
 	cpu_set_t cpuset; 
 	int cpu = 1;
+	int local_hr = 0, local_hl = 0; //local variables for pwm control
 	
 	CPU_ZERO(&cpuset);       //clears the cpuset
 	CPU_SET( cpu , &cpuset); //set CPU 2 on cpuset
@@ -128,6 +132,13 @@ void *processing_thread_function(void* unsused)
     } 
         
    	while(running) {
+   	
+   		if((high_right != local_hr)||(high_left != local_hl)){
+   			local_hr = high_right;
+   			local_hl = high_left;
+   			pwm_control(local_hr, local_hl);
+   		}
+   	
 		if( !cap.read(frame) ){
 			std::cout << "Camera was disconected";			
 			break;
@@ -193,38 +204,8 @@ void *processing_thread_function(void* unsused)
 	pthread_exit(NULL);
 }
 
-void *pwm_thread_function(void *unused){
+	void pwm_control(int h_r, int h_l){
 	
-	int h_r, h_l, ret;
-	
-	// for cpu affinity
-	cpu_set_t cpuset; 
-	int cpu = 2;
-	
-	CPU_ZERO(&cpuset);       //clears the cpuset
-	CPU_SET( cpu , &cpuset); //set CPU 2 on cpuset
-	sched_setaffinity(0, sizeof(cpuset), &cpuset);
-	
-	//source: http://www.yonch.com/tech/82-linux-thread-priority
-	// We'll operate on the currently running thread.
-    pthread_t this_thread = pthread_self();
-    // struct sched_param is used to store the scheduling priority
-	struct sched_param params;
-	// We'll set the priority to the maximum.
-	params.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	std::cout << "Trying to set thread realtime prio = " << params.sched_priority << std::endl;
- 
-	// Attempt to set thread real-time priority to the SCHED_FIFO policy
-	ret = pthread_setschedparam(this_thread, SCHED_FIFO, &params);
-	if (ret != 0) {
-    	// Print the error
-    	std::cout << "Unsuccessful in setting thread realtime prio" << std::endl;
-    	pthread_exit(NULL);
-	}
-
-	while(running){
-		h_r = high_right, h_l = high_left;
-		
 		pwm_right.high();
 		pwm_left.high();
 		usleep(std::min(h_r, h_l));
@@ -239,9 +220,6 @@ void *pwm_thread_function(void *unused){
 			pwm_left.low();
 		usleep(period - std::max(h_r, h_l));
 	}
-	
-	pthread_exit(NULL);
-}
 
 void add_info(int fps){
 	// white canvas
