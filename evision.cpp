@@ -24,6 +24,9 @@ int settings_contrast = 0;
 int settings_blur = 1;
 int settings_threshold = 128;
 
+// Graphics
+std::vector<std::vector<cv::Point>> contours;
+
 int main(int argc, char** argv)
 {
     pthread_t processing_thread, pwm_thread;
@@ -102,9 +105,40 @@ void send_frame_to_gui(cv::Mat &frame, int step){
 	}
 }
 
-bool contour_area(std::vector<cv::Point> a, std::vector<cv::Point> b){
-	return cv::contourArea(a) > cv::contourArea(b);
+bool contour_area(int a, int b){
+	return cv::contourArea(contours[a]) > cv::contourArea(contours[b]);
 }
+
+
+bool get_obstacle(
+	int parent, 
+	std::vector<std::vector<cv::Point>> contours, 
+	std::vector<cv::Vec4i> hierarchy,
+	cv::Rect &obstacle){
+	
+	int start = hierarchy[parent][2];
+	int closest = -1;
+	bool found = false;
+	
+	while(start > 0){
+		
+		if(closest == -1){
+			closest = start;
+			found = true;
+		} else if(cv::boundingRect(contours[start]).y > cv::boundingRect(contours[closest]).y){
+			closest = start;
+		}
+
+		start = hierarchy[start][0];
+	}
+	
+	if(found){
+		obstacle = cv::boundingRect(contours[closest]);
+	}
+	
+	return found;	
+}
+
 
 void *processing_thread_function(void* unsused)
 {
@@ -172,18 +206,46 @@ void *processing_thread_function(void* unsused)
 		
 		// detect and paint contours
 		
-		std::vector<std::vector<cv::Point>> contours, road(1);
+		std::vector<std::vector<cv::Point>> road(1);
 		std::vector<cv::Vec4i> hierarchy;
+		
 		contour_frame = blur_frame;
 		
 		cv::findContours(threshold_frame, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);		
 		if(contours.size() > 1){
-			std::sort(contours.begin(), contours.end(), contour_area);
-			cv::approxPolyDP(cv::Mat(contours[0]), road[0], 20, true);			
-			cv::drawContours(cam_frame, road, -1, cv::Scalar(0, 255 ,0), 2);
 			
-			cv::approxPolyDP(cv::Mat(contours[1]), road[0], 20, true);			
-			cv::drawContours(cam_frame, road, -1, cv::Scalar(255, 0, 0), 2);	 	
+			std::vector<int> contour_indexes(contours.size());
+			// create index vector
+			for(unsigned int i = 0; i < contours.size(); i++){
+				contour_indexes[i] = i;
+			}				
+				
+			// sorting index vector acording to controur area
+			std::sort(contour_indexes.begin(), contour_indexes.end(), contour_area);
+			
+			cv::approxPolyDP(cv::Mat(contours[contour_indexes[0]]), road[0], 20, true);			
+			cv::drawContours(cam_frame, road, -1, cv::Scalar(0, 255 ,0), 2);	
+			
+			//draw_childrens(cam_frame, get_contour_childrens(contour_indexes[0], hierarchy), cv::Scalar(0, 0, 255));					
+			//road[0] = contours[get_closest_children(contour_indexes[0], contours, hierarchy)];
+			
+			cv::Rect obstacle;
+			if(get_obstacle(contour_indexes[0], contours, hierarchy, obstacle)){
+				cv::rectangle(cam_frame, obstacle, cv::Scalar(0, 0, 255));
+				std::cout << cv::Point(obstacle.x + (obstacle.width / 2), obstacle.y + (obstacle.height / 2)) << std::endl;
+			}
+			
+			//if(get_closest_children(contour_indexes[0], contours, hierarchy) > 0){
+			//	cv::rectangle(cam_frame, cv::boundingRect(contours[get_closest_children(contour_indexes[0], contours, hierarchy)]), cv::Scalar(255));
+			//}
+			
+			cv::approxPolyDP(cv::Mat(contours[contour_indexes[1]]), road[0], 20, true);			
+			cv::drawContours(cam_frame, road, -1, cv::Scalar(255, 0, 0), 2);
+			
+			if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
+				cv::rectangle(cam_frame, obstacle, cv::Scalar(255, 0, 255));
+			}
+			//draw_childrens(cam_frame, get_contour_childrens(contour_indexes[1], hierarchy), cv::Scalar(255, 0, 255));	 	
 		}
 		processing_tracer.event("Contour detection");
 		send_frame_to_gui(cam_frame, CONTOUR_IMAGE);
