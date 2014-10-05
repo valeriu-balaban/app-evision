@@ -6,8 +6,8 @@
 
 
 // Global variables
-GPIO pwm_right(4, "out"), pwm_left(7, "out"); // led_right(2 , "out");
-GPIO led_front(1, "out"), led_R(5, "out"), start(3 ,"out"); // 0,2,6 bulit
+GPIO pwm_right(1, "out"), pwm_left(3, "out"); // led_right(2 , "out");
+GPIO led_front(5, "out"), led_R(4, "out"), start(7 ,"out"); // 0,2,6 bulit
 int high_right = 600, high_left = 600, period = 20000; //PWM high time in us
 
 // GUI globals
