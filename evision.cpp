@@ -89,6 +89,8 @@ int main(int argc, char** argv)
 			
 			// ESC
 			if((gui_key == 43) || (gui_key == 27)){
+				led_front.low();
+				led_R.low();
 				running = false;
 			} else if((gui_key == 49) || (gui_key == 65)) {
 				start.high(); // 1 = start/stop
