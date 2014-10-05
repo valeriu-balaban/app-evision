@@ -90,13 +90,13 @@ int main(int argc, char** argv)
 			// ESC
 			if((gui_key == 43) || (gui_key == 27)){
 				running = false;
-			} else if(gui_key == 49) {
+			} else if((gui_key == 49) || (gui_key == 65)) {
 				start.high(); // 1 = start/stop
 				usleep(50000);
 				start.low();
-			} else if(gui_key == 50) {
+			} else if((gui_key == 50) || (gui_key == 66)) {
 				led_front.toggle(); // 2 = faruri
-			} else if(gui_key == 51) {
+			} else if((gui_key == 51) || (gui_key == 67)) {
 				led_R.toggle(); // 3 = far pieton
 			} else {
 				std::cout << gui_key << std::endl;
