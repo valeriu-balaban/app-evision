@@ -10,6 +10,7 @@ const int GPIO_MAP[] = {75, 91, 191, 24, 200, 90, 72, 101};
 class GPIO {
 	
 	bool is_enabled;
+	bool is_on;
 	std::string sys_interface;
 	std::ofstream sys_file; 
 
@@ -19,6 +20,7 @@ public:
 		
 		if( init(port, direction) ){
 			is_enabled = true;
+			is_on = false;
 		}
 		
 	}
@@ -102,10 +104,20 @@ public:
 	
 	void high(){
 		set(true);
+		is_on = true;
 	}
 	
 	void low(){
 		set(false);
+		is_on = false;
+	}
+	
+	void toggle(){
+		if(is_on == true) {
+			low();
+		} else {
+			high();
+		}
 	}
 
 };
