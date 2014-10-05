@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 				running = false;
 			} else if(gui_key == 49) {
 				start.high(); // 1 = start/stop
-				usleep(10000);
+				usleep(50000);
 				start.low();
 			} else if(gui_key == 50) {
 				led_front.toggle(); // 2 = faruri
