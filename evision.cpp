@@ -24,6 +24,9 @@ int settings_show_step = 0;
 int settings_contrast = 0;
 int settings_blur = 1;
 int settings_threshold = 128;
+int settings_servo_offset = 500;
+int settings_road_approx = 10;
+
 
 // Graphics
 std::vector<std::vector<cv::Point>> contours;
@@ -59,6 +62,8 @@ int main(int argc, char** argv)
 	cv::createTrackbar("Contrast    ", settings_window_name, &settings_contrast, 1);
 	cv::createTrackbar("Mean Blur   ", settings_window_name, &settings_blur, 1);
 	cv::createTrackbar("Threshold   ", settings_window_name, &settings_threshold, 255);
+	cv::createTrackbar("Road Approx ", settings_window_name, &settings_road_approx, 30);
+	cv::createTrackbar("Servo Offset", settings_window_name, &settings_servo_offset, 1000);
 	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 3000);
 	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 3000);
 	
@@ -246,7 +251,7 @@ void *processing_thread_function(void* unsused)
 			// sorting index vector acording to controur area
 			std::sort(contour_indexes.begin(), contour_indexes.end(), contour_area);
 			
-			cv::approxPolyDP(cv::Mat(contours[contour_indexes[0]]), road[0], 20, true);			
+			cv::approxPolyDP(cv::Mat(contours[contour_indexes[0]]), road[0], settings_road_approx, true);			
 			cv::drawContours(cam_frame, road, -1, cv::Scalar(0, 255 ,0), 2);	
 			
 			//draw_childrens(cam_frame, get_contour_childrens(contour_indexes[0], hierarchy), cv::Scalar(0, 0, 255));					
@@ -262,7 +267,7 @@ void *processing_thread_function(void* unsused)
 			//	cv::rectangle(cam_frame, cv::boundingRect(contours[get_closest_children(contour_indexes[0], contours, hierarchy)]), cv::Scalar(255));
 			//}
 			
-			cv::approxPolyDP(cv::Mat(contours[contour_indexes[1]]), road[0], 20, true);			
+			cv::approxPolyDP(cv::Mat(contours[contour_indexes[1]]), road[0], settings_road_approx, true);			
 			cv::drawContours(cam_frame, road, -1, cv::Scalar(255, 0, 0), 2);
 			
 			if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
