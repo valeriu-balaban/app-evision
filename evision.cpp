@@ -318,17 +318,17 @@ void pwm_servo_left(int h_l){
 }
 
 void set_servo_offset(int servo_offset){
-	high_right = high_righ + servo_offset;
+	high_right = high_right + servo_offset;
 	high_left = high_left + servo_offset;
 }
 
 void set_road_offset(int road_offset){
-	high_right = high_righ + road_offset;
+	high_right = high_right + road_offset;
 	high_left = high_left + road_offset;
 }
 
 void set_obstacle_offset(int y_position){
-	obstacle_offset = int (0.9 * y + 15);
+	obstacle_offset = int (0.9 * y_position + 15);
 	high_right = high_right + obstacle_offset;
 	//de facut dezactivarea obstacle_offset
 }
