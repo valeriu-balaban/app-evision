@@ -282,12 +282,12 @@ void *processing_thread_function(void* unsused)
 
 void pwm_servo_right(int h_r){
 	int static local_hr = 0;
-	if(abs(h_r - local) > 5){
+	if(abs(h_r - local_hr) > 5){
 		local_hr = h_r;
 		pwm_right.high();
 		usleep(local_hr);
 		pwm_right.low();
-		usleept(period - local_hr);
+		usleep(period - local_hr);
 	}
 }
 
