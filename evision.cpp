@@ -166,6 +166,7 @@ void *processing_thread_function(void* unsused)
     cv::Mat 			frame, cam_frame, bw_frame, blur_frame, contrast_frame;
     cv::Mat				threshold_frame, canny_frame, contour_frame;
     Tracer				processing_tracer;
+    
     // for cpu affinity
 	cpu_set_t cpuset; 
 	int cpu = 1;
@@ -227,8 +228,11 @@ void *processing_thread_function(void* unsused)
 		processing_tracer.event("Edge detection");
 		send_frame_to_gui(canny_frame, CANNY_IMAGE);
 		
+		
 		// Apply threshhold
 		threshold(blur_frame, threshold_frame, settings_threshold, 255, CV_THRESH_BINARY);
+		// Disable image top from detection to remove false edges
+		cv::rectangle(threshold_frame, cv::Rect(0, 0, 320, 40), cv::Scalar(0), CV_FILLED);
 		processing_tracer.event("Appling threshold");
 		send_frame_to_gui(threshold_frame, THRESHOLD_IMAGE);
 		
@@ -236,8 +240,6 @@ void *processing_thread_function(void* unsused)
 		
 		std::vector<std::vector<cv::Point>> road(1);
 		std::vector<cv::Vec4i> hierarchy;
-		
-		contour_frame = blur_frame;
 		
 		cv::findContours(threshold_frame, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);		
 		if(contours.size() > 1){
