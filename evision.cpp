@@ -181,11 +181,8 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 		// sorting index vector acording to controur area
 		std::sort(contour_indexes.begin(), contour_indexes.end(), contour_area);
 		
-		cv::approxPolyDP(cv::Mat(contours[contour_indexes[0]]), road[0], settings_road_approx, true);			
-		cv::drawContours(cam_frame, road, 0, cv::Scalar(0, 255 ,0), 2);	
-		
-		cv::approxPolyDP(cv::Mat(contours[contour_indexes[1]]), road[1], settings_road_approx, true);			
-		cv::drawContours(cam_frame, road, 1, cv::Scalar(255, 0, 0), 2);
+		cv::approxPolyDP(cv::Mat(contours[contour_indexes[0]]), road[0], settings_road_approx, true);					
+		cv::approxPolyDP(cv::Mat(contours[contour_indexes[1]]), road[1], settings_road_approx, true);					
 		
 		// validate road detection
 		int road_edge = -1;
@@ -209,6 +206,11 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 				return;
 			}				
 		}
+		
+		// paint road area
+		cv::drawContours(cam_frame, road, 0, cv::Scalar(0, 255 ,0), 2);	
+		cv::drawContours(cam_frame, road, 1, cv::Scalar(255, 0, 0), 2);
+		
 		
 		// get road offset
 		// reference point is the left most point from the top edge of road contour
