@@ -8,7 +8,8 @@
 // Global variables
 GPIO pwm_right(1, "out"), pwm_left(3, "out"); // led_right(2 , "out");
 GPIO led_front(5, "out"), led_R(4, "out"), start(7 ,"out"); // 0,2,6 bulit
-int high_right = 600, high_left = 600, period = 20000; //PWM high time in us
+int static high_right = 600, high_left = 600; //PWM high time in us
+int period = 20000; //PWM period
 
 // GUI globals
 cv::Mat guiframe;
@@ -29,7 +30,8 @@ int settings_threshold = 128;
 std::vector<std::vector<cv::Point>> contours;
 
 //Functions declaration
-void pwm_control(int, int);
+void pwm_right(int);
+void pwm_left(int);
 
 
 int main(int argc, char** argv)
@@ -59,8 +61,8 @@ int main(int argc, char** argv)
 	cv::createTrackbar("Contrast    ", settings_window_name, &settings_contrast, 1);
 	cv::createTrackbar("Mean Blur   ", settings_window_name, &settings_blur, 1);
 	cv::createTrackbar("Threshold   ", settings_window_name, &settings_threshold, 255);
-	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 3000);
-	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 3000);
+	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 1500);
+	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 1500);
 	
 	pthread_create(&processing_thread, NULL, processing_thread_function, NULL);    
 	//pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
@@ -179,10 +181,18 @@ void *processing_thread_function(void* unsused)
         
    	while(running) {
    	
-   		if((high_right != local_hr)||(high_left != local_hl)){
-   			local_hr = high_right;
-   			local_hl = high_left;
-   			pwm_control(local_hr, local_hl);
+   		if(high_right != local_hr){
+   			if(abs(high_righ - local_hr) > 5){
+   				local_hr = high_righ;
+   				pwm_right(local_hr);
+   				}
+   			}
+   			
+   		if(high_left != local_hl){
+   			if(abs(high_left - local_hl) > 5){
+   				local_hl = high_left;
+   				pwm_left(local_hl);
+   			}
    		}
    	
 		if( !cap.read(frame) ){
@@ -278,22 +288,18 @@ void *processing_thread_function(void* unsused)
 	pthread_exit(NULL);
 }
 
-void pwm_control(int h_r, int h_l){	
-	for(int i = 0; i < 2; i++){
-		pwm_right.high();
-		pwm_left.high();
-		usleep(std::min(h_r, h_l));
-		if(h_r > h_l)
-			pwm_left.low();
-		else 
-			pwm_right.low();
-		usleep(abs(h_r - h_l));
-		if(h_r > h_l)
-			pwm_right.low();
-		else
-			pwm_left.low();
-		usleep(period - std::max(h_r, h_l));
-	}
+void pwm_right(int h_r){
+	pwm_righ.high();
+	usleep(h_r);
+	pwm_righ.low();
+	usleep(period - h_r);
+}
+
+void pwm_left(int h_l){
+	pwm_left.high();
+	usleep(h_l);
+	pwm_left.low();
+	usleep(period - h_l);
 }
 
 void add_info(int fps){
