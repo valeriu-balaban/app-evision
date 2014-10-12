@@ -190,10 +190,10 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 		// validate road detection
 		int road_edge = -1;
 		for(unsigned int i = 0; i < road[0].size(); ++i){
-			if((road[0][i].y == 240) && (road_edge == -1)){
+			if((road[0][i].y == 235) && (road_edge == -1)){
 				road_edge = road[0][i].x;
 				 
-			} else if((road[0][i].y == 240) && (road[0][i].x < road_edge)){
+			} else if((road[0][i].y == 235) && (road[0][i].x < road_edge)){
 				
 				road_edge = road[0][i].x;
 			}				
@@ -203,7 +203,7 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 			return ;
 		
 		for(unsigned int i = 0; i < road[1].size(); ++i){
-			if((road[1][i].y == 240) && (road[1][i].x > road_edge)){
+			if((road[1][i].y == 235) && (road[1][i].x > road_edge)){
 				
 				// wrong detection
 				return;
