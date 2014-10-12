@@ -32,7 +32,8 @@ int settings_road_approx = 10;
 std::vector<std::vector<cv::Point>> contours;
 
 //Functions declaration
-void pwm_control(int, int);
+void pwm_servo_right(int);
+void pwm_servo_left(int);
 
 
 int main(int argc, char** argv)
@@ -64,8 +65,8 @@ int main(int argc, char** argv)
 	cv::createTrackbar("Threshold   ", settings_window_name, &settings_threshold, 255);
 	cv::createTrackbar("Road Approx ", settings_window_name, &settings_road_approx, 30);
 	cv::createTrackbar("Servo Offset", settings_window_name, &settings_servo_offset, 1000);
-	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 3000);
-	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 3000);
+	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 1500);
+	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 1500);
 	
 	pthread_create(&processing_thread, NULL, processing_thread_function, NULL);    
 	//pthread_create(&pwm_thread, NULL, pwm_thread_function, NULL);
@@ -170,7 +171,6 @@ void *processing_thread_function(void* unsused)
     // for cpu affinity
 	cpu_set_t cpuset; 
 	int cpu = 1;
-	int local_hr = 0, local_hl = 0; //local variables for pwm control
 	
 	CPU_ZERO(&cpuset);       //clears the cpuset
 	CPU_SET( cpu , &cpuset); //set CPU 2 on cpuset
@@ -184,13 +184,6 @@ void *processing_thread_function(void* unsused)
     } 
         
    	while(running) {
-   	
-   		if((high_right != local_hr)||(high_left != local_hl)){
-   			local_hr = high_right;
-   			local_hl = high_left;
-   			pwm_control(local_hr, local_hl);
-   		}
-   	
 		if( !cap.read(frame) ){
 			std::cout << "Camera was disconected";			
 			break;
@@ -279,27 +272,35 @@ void *processing_thread_function(void* unsused)
 		}
 		processing_tracer.event("Contour detection");
 		send_frame_to_gui(cam_frame, CONTOUR_IMAGE);
+		
+		   	
+   		pwm_servo_right(high_right);
+   		pwm_servo_left(high_left);
 	}
 	
 	processing_tracer.end();
 	pthread_exit(NULL);
 }
 
-void pwm_control(int h_r, int h_l){	
-	for(int i = 0; i < 2; i++){
+void pwm_servo_right(int h_r){
+	int static local_hr = 0;
+	if(abs(h_r - local_hr) > 5){
+		local_hr = h_r;
 		pwm_right.high();
+		usleep(local_hr);
+		pwm_right.low();
+		usleep(period - local_hr);
+	}
+}
+
+void pwm_servo_left(int h_l){
+	int static local_hl = 0;
+	if(abs(h_l - local_hl) > 5){
+		local_hl = h_l;
 		pwm_left.high();
-		usleep(std::min(h_r, h_l));
-		if(h_r > h_l)
-			pwm_left.low();
-		else 
-			pwm_right.low();
-		usleep(abs(h_r - h_l));
-		if(h_r > h_l)
-			pwm_right.low();
-		else
-			pwm_left.low();
-		usleep(period - std::max(h_r, h_l));
+		usleep(local_hl);
+		pwm_left.low();
+		usleep(period - local_hl);
 	}
 }
 
