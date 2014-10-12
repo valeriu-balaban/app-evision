@@ -225,16 +225,21 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 			road_offset = new_road_offset;
 		}
 		
-		std::cout << road_offset << std::endl;
+		//std::cout << road_offset << std::endl;		
 		
 		cv::Rect obstacle;
 		if(get_obstacle(contour_indexes[0], contours, hierarchy, obstacle)){
 			cv::rectangle(cam_frame, obstacle, cv::Scalar(0, 0, 255));
-			std::cout << cv::Point(obstacle.x + (obstacle.width / 2), obstacle.y + (obstacle.height / 2)) << std::endl;
+			//std::cout << cv::Point(obstacle.x + (obstacle.width / 2), obstacle.y + (obstacle.height / 2)) << std::endl;
+			h_r = high_right + servo_offset + road_offset + car_position(obstacle.y + (obstacle.height / 2));//!!!!
+			pwm_servo_right(h_r);
 		}
 		
 		if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
 			cv::rectangle(cam_frame, obstacle, cv::Scalar(255, 0, 255));
+			
+			h_l = high_left + servo_offset + road_offset + obstacle_position(0);//!!!!   	
+   			pwm_servo_left(h_l);
 		}
 		
 		cv::line(cam_frame, cv::Point(settings_middle_line, 320), cv::Point(settings_middle_line, top_edge), cv::Scalar(0, 255, 255));
@@ -315,12 +320,6 @@ void *processing_thread_function(void* unsused)
 		draw_obstacles(threshold_frame, cam_frame);
 		processing_tracer.event("Contour detection");
 		send_frame_to_gui(cam_frame, CONTOUR_IMAGE);
-		
-		h_r = high_right + servo_offset + road_offset + car_position(0);//!!!!
-		h_l = high_left + servo_offset + road_offset + obstacle_position(0);//!!!!   	
-
-   		pwm_servo_right(h_r);
-   		pwm_servo_left(h_l);
 	}
 	
 	processing_tracer.end();
