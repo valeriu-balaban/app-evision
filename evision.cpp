@@ -26,6 +26,7 @@ int settings_blur = 1;
 int settings_threshold = 128;
 int settings_servo_offset = 500;
 int settings_road_approx = 10;
+int settings_middle_line = 240;
 
 
 // Graphics
@@ -64,6 +65,7 @@ int main(int argc, char** argv)
 	cv::createTrackbar("Mean Blur   ", settings_window_name, &settings_blur, 1);
 	cv::createTrackbar("Threshold   ", settings_window_name, &settings_threshold, 255);
 	cv::createTrackbar("Road Approx ", settings_window_name, &settings_road_approx, 30);
+	cv::createTrackbar("Middle Line ", settings_window_name, &settings_middle_line, 320);
 	cv::createTrackbar("Servo Offset", settings_window_name, &settings_servo_offset, 1000);
 	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 1500);
 	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 1500);
@@ -262,8 +264,10 @@ void *processing_thread_function(void* unsused)
 			if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
 				cv::rectangle(cam_frame, obstacle, cv::Scalar(255, 0, 255));
 			}
-			//draw_childrens(cam_frame, get_contour_childrens(contour_indexes[1], hierarchy), cv::Scalar(255, 0, 255));	 	
+			
+			cv::line(cam_frame, cv::Point(settings_middle_line, 320), cv::Point(settings_middle_line, top_edge), cv::Scalar(0, 255, 255));
 		}
+		
 		processing_tracer.event("Contour detection");
 		send_frame_to_gui(cam_frame, CONTOUR_IMAGE);
 		
