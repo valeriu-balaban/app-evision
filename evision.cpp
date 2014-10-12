@@ -26,7 +26,7 @@ int settings_contrast = 0;
 int settings_blur = 1;
 int settings_threshold = 128;
 int settings_servo_offset = 500;
-int settings_road_approx = 10;
+int settings_road_approx = 5;
 int settings_middle_line = 240;
 
 
@@ -171,7 +171,7 @@ void *processing_thread_function(void* unsused)
     cv::Mat				threshold_frame, canny_frame, contour_frame;
     Tracer				processing_tracer;
     
-	std::vector<std::vector<cv::Point>> road(1);
+	std::vector<std::vector<cv::Point>> road(2);
 	std::vector<cv::Vec4i> hierarchy;
     
     // for cpu affinity
@@ -250,17 +250,26 @@ void *processing_thread_function(void* unsused)
 			std::sort(contour_indexes.begin(), contour_indexes.end(), contour_area);
 			
 			cv::approxPolyDP(cv::Mat(contours[contour_indexes[0]]), road[0], settings_road_approx, true);			
-			cv::drawContours(cam_frame, road, -1, cv::Scalar(0, 255 ,0), 2);	
+			cv::drawContours(cam_frame, road, 0, cv::Scalar(0, 255 ,0), 2);	
 			
+			cv::approxPolyDP(cv::Mat(contours[contour_indexes[1]]), road[1], settings_road_approx, true);			
+			cv::drawContours(cam_frame, road, 1, cv::Scalar(255, 0, 0), 2);
+			
+			// get road offset
+			int road_tmp = 600;
+			for(unsigned int i = 0; i < road[0].size(); ++i){
+				if((road[0][i].y == top_edge) && (road[0][i].x < road_tmp)){
+					road_tmp = road[0][i].x;
+				}				
+			}
+			
+			std::cout << road_tmp << std::endl;
 			
 			cv::Rect obstacle;
 			if(get_obstacle(contour_indexes[0], contours, hierarchy, obstacle)){
 				cv::rectangle(cam_frame, obstacle, cv::Scalar(0, 0, 255));
 				std::cout << cv::Point(obstacle.x + (obstacle.width / 2), obstacle.y + (obstacle.height / 2)) << std::endl;
 			}
-			
-			cv::approxPolyDP(cv::Mat(contours[contour_indexes[1]]), road[0], settings_road_approx, true);			
-			cv::drawContours(cam_frame, road, -1, cv::Scalar(255, 0, 0), 2);
 			
 			if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
 				cv::rectangle(cam_frame, obstacle, cv::Scalar(255, 0, 255));
