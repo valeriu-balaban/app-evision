@@ -10,7 +10,6 @@ GPIO pwm_right(1, "out"), pwm_left(3, "out"); // led_right(2 , "out");
 GPIO led_front(5, "out"), led_R(4, "out"), start(7 ,"out"); // 0,2,6 bulit
 int high_right = 600, high_left = 600, period = 20000; //PWM high time in us
 int top_edge = 50, servo_offset = 0, road_offset = 0;
-int car_left_offset = 0, obstacle_offset = 0;
 
 // GUI globals
 cv::Mat guiframe;
@@ -37,10 +36,8 @@ std::vector<std::vector<cv::Point>> contours;
 //Functions declaration
 void pwm_servo_right(int);
 void pwm_servo_left(int);
-void set_servo_offset(int);
-void set_road_offset(int);
-void set_car_left_offset(int);
-void set_obstacle_offset(int);
+int car_position(int);
+int obstacle_position(int);
 
 
 int main(int argc, char** argv)
@@ -181,7 +178,7 @@ void *processing_thread_function(void* unsused)
     
     // for cpu affinity
 	cpu_set_t cpuset; 
-	int cpu = 1;
+	int cpu = 1, h_r, h_l;
 	
 	CPU_ZERO(&cpuset);       //clears the cpuset
 	CPU_SET( cpu , &cpuset); //set CPU 2 on cpuset
@@ -286,7 +283,8 @@ void *processing_thread_function(void* unsused)
 		processing_tracer.event("Contour detection");
 		send_frame_to_gui(cam_frame, CONTOUR_IMAGE);
 		
-		   	
+		h_r = high_right + servo_offset + road_offset + car_position(0);//!!!!
+		h_l = high_left + servo_offset + road_offset + obstacle_position(0);//!!!!   	
    		pwm_servo_right(high_right);
    		pwm_servo_left(high_left);
 	}
@@ -317,25 +315,20 @@ void pwm_servo_left(int h_l){
 	}
 }
 
-void set_servo_offset(int servo_offset){
-	high_right = high_right + servo_offset;
-	high_left = high_left + servo_offset;
+int obstacle_position(int y_position){
+	if(y_position > top_edge){
+		return int ( 0.9 * y_position + 15);
+	} else {
+		return 0;
+	}
 }
 
-void set_road_offset(int road_offset){
-	high_right = high_right + road_offset;
-	high_left = high_left + road_offset;
-}
-
-void set_obstacle_offset(int y_position){
-	obstacle_offset = int (0.9 * y_position + 15);
-	high_right = high_right + obstacle_offset;
-	//de facut dezactivarea obstacle_offset
-}
-
-void set_car_offset(int y_position){
-	//?????
-	high_left = high_left + car_left_offset;
+int car_position(int y_position){
+	if(y_position > top_edge){
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 void add_info(int fps){
