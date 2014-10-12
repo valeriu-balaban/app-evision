@@ -258,14 +258,19 @@ void *processing_thread_function(void* unsused)
 			cv::drawContours(cam_frame, road, 1, cv::Scalar(255, 0, 0), 2);
 			
 			// get road offset
-			int road_tmp = 600;
+			// reference point is the left most point from the top edge of road contour
+			int new_road_offset = 600;
 			for(unsigned int i = 0; i < road[0].size(); ++i){
-				if((road[0][i].y == top_edge) && (road[0][i].x < road_tmp)){
-					road_tmp = road[0][i].x;
+				if((road[0][i].y == top_edge) && (road[0][i].x < new_road_offset)){
+					new_road_offset = road[0][i].x;
 				}				
 			}
 			
-			std::cout << road_tmp << std::endl;
+			if((new_road_offset > 50) && (new_road_offset < 250)){
+				road_offset = new_road_offset;
+			}
+			
+			std::cout << road_offset << std::endl;
 			
 			cv::Rect obstacle;
 			if(get_obstacle(contour_indexes[0], contours, hierarchy, obstacle)){
