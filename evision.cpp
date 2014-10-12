@@ -9,7 +9,7 @@
 GPIO pwm_right(1, "out"), pwm_left(3, "out"); // led_right(2 , "out");
 GPIO led_front(5, "out"), led_R(4, "out"), start(7 ,"out"); // 0,2,6 bulit
 int high_right = 600, high_left = 600, period = 20000; //PWM high time in us
-
+int top_edge = 50;
 // GUI globals
 cv::Mat guiframe;
 bool new_frame = false;
@@ -168,6 +168,9 @@ void *processing_thread_function(void* unsused)
     cv::Mat				threshold_frame, canny_frame, contour_frame;
     Tracer				processing_tracer;
     
+	std::vector<std::vector<cv::Point>> road(1);
+	std::vector<cv::Vec4i> hierarchy;
+    
     // for cpu affinity
 	cpu_set_t cpuset; 
 	int cpu = 1;
@@ -225,14 +228,11 @@ void *processing_thread_function(void* unsused)
 		// Apply threshhold
 		threshold(blur_frame, threshold_frame, settings_threshold, 255, CV_THRESH_BINARY);
 		// Disable image top from detection to remove false edges
-		cv::rectangle(threshold_frame, cv::Rect(0, 0, 320, 40), cv::Scalar(0), CV_FILLED);
+		cv::rectangle(threshold_frame, cv::Rect(0, 0, 320, top_edge), cv::Scalar(0), CV_FILLED);
 		processing_tracer.event("Appling threshold");
 		send_frame_to_gui(threshold_frame, THRESHOLD_IMAGE);
 		
 		// detect and paint contours
-		
-		std::vector<std::vector<cv::Point>> road(1);
-		std::vector<cv::Vec4i> hierarchy;
 		
 		cv::findContours(threshold_frame, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);		
 		if(contours.size() > 1){
@@ -249,18 +249,12 @@ void *processing_thread_function(void* unsused)
 			cv::approxPolyDP(cv::Mat(contours[contour_indexes[0]]), road[0], settings_road_approx, true);			
 			cv::drawContours(cam_frame, road, -1, cv::Scalar(0, 255 ,0), 2);	
 			
-			//draw_childrens(cam_frame, get_contour_childrens(contour_indexes[0], hierarchy), cv::Scalar(0, 0, 255));					
-			//road[0] = contours[get_closest_children(contour_indexes[0], contours, hierarchy)];
 			
 			cv::Rect obstacle;
 			if(get_obstacle(contour_indexes[0], contours, hierarchy, obstacle)){
 				cv::rectangle(cam_frame, obstacle, cv::Scalar(0, 0, 255));
 				std::cout << cv::Point(obstacle.x + (obstacle.width / 2), obstacle.y + (obstacle.height / 2)) << std::endl;
 			}
-			
-			//if(get_closest_children(contour_indexes[0], contours, hierarchy) > 0){
-			//	cv::rectangle(cam_frame, cv::boundingRect(contours[get_closest_children(contour_indexes[0], contours, hierarchy)]), cv::Scalar(255));
-			//}
 			
 			cv::approxPolyDP(cv::Mat(contours[contour_indexes[1]]), road[0], settings_road_approx, true);			
 			cv::drawContours(cam_frame, road, -1, cv::Scalar(255, 0, 0), 2);
