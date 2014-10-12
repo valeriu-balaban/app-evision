@@ -9,7 +9,7 @@
 GPIO pwm_right(1, "out"), pwm_left(3, "out"); // led_right(2 , "out");
 GPIO led_front(5, "out"), led_R(4, "out"), start(7 ,"out"); // 0,2,6 bulit
 int high_right = 600, high_left = 600, period = 20000; //PWM high time in us
-
+int servo_offset = 0, road = 0, car_left = 0, obstacle = 0;
 // GUI globals
 cv::Mat guiframe;
 bool new_frame = false;
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 				led_front.low();
 				led_R.low();
 				running = false;
-			} else if((gui_key == 49) || (gui_key == 65)) {
+			} else if((gui_key == 48) || (gui_key == 32)) {
 				start.high(); // 1 = start/stop
 				usleep(50000);
 				start.low();
