@@ -8,8 +8,7 @@
 // Global variables
 GPIO pwm_right(1, "out"), pwm_left(3, "out"); // led_right(2 , "out");
 GPIO led_front(5, "out"), led_R(4, "out"), start(7 ,"out"); // 0,2,6 bulit
-int static high_right = 600, high_left = 600; //PWM high time in us
-int period = 20000; //PWM period
+int high_right = 600, high_left = 600, period = 20000; //PWM high time in us
 
 // GUI globals
 cv::Mat guiframe;
@@ -33,8 +32,8 @@ int settings_road_approx = 10;
 std::vector<std::vector<cv::Point>> contours;
 
 //Functions declaration
-void pwm_right(int);
-void pwm_left(int);
+void pwm_servo_right(int);
+void pwm_servo_left(int);
 
 
 int main(int argc, char** argv)
@@ -171,7 +170,6 @@ void *processing_thread_function(void* unsused)
     // for cpu affinity
 	cpu_set_t cpuset; 
 	int cpu = 1;
-	int local_hr = 0, local_hl = 0; //local variables for pwm control
 	
 	CPU_ZERO(&cpuset);       //clears the cpuset
 	CPU_SET( cpu , &cpuset); //set CPU 2 on cpuset
@@ -185,21 +183,6 @@ void *processing_thread_function(void* unsused)
     } 
         
    	while(running) {
-   	
-   		if(high_right != local_hr){
-   			if(abs(high_righ - local_hr) > 5){
-   				local_hr = high_righ;
-   				pwm_right(local_hr);
-   				}
-   			}
-   			
-   		if(high_left != local_hl){
-   			if(abs(high_left - local_hl) > 5){
-   				local_hl = high_left;
-   				pwm_left(local_hl);
-   			}
-   		}
-   	
 		if( !cap.read(frame) ){
 			std::cout << "Camera was disconected";			
 			break;
@@ -287,24 +270,36 @@ void *processing_thread_function(void* unsused)
 		}
 		processing_tracer.event("Contour detection");
 		send_frame_to_gui(cam_frame, CONTOUR_IMAGE);
+		
+		   	
+   		pwm_servo_right(high_right);
+   		pwm_servo_left(high_left);
 	}
 	
 	processing_tracer.end();
 	pthread_exit(NULL);
 }
 
-void pwm_right(int h_r){
-	pwm_righ.high();
-	usleep(h_r);
-	pwm_righ.low();
-	usleep(period - h_r);
+void pwm_servo_right(int h_r){
+	int static local_hr = 0;
+	if(abs(h_r - local) > 5){
+		local_hr = h_r;
+		pwm_right.high();
+		usleep(local_hr);
+		pwm_right.low();
+		usleept(period - local_hr);
+	}
 }
 
-void pwm_left(int h_l){
-	pwm_left.high();
-	usleep(h_l);
-	pwm_left.low();
-	usleep(period - h_l);
+void pwm_servo_left(int h_l){
+	int static local_hl = 0;
+	if(abs(h_l - local_hl) > 5){
+		local_hl = h_l;
+		pwm_left.high();
+		usleep(local_hl);
+		pwm_left.low();
+		usleep(period - local_hl);
+	}
 }
 
 void add_info(int fps){
