@@ -235,7 +235,8 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 		}
 		
 		if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
-			cv::rectangle(cam_frame, obstacle, cv::Scalar(255, 0, 255));
+			cv::rectangle(cam_frame, obstacle, cv::Scalar(2
+			55, 0, 255));
 	   	
    			pwm_servo_left(high_left + servo_offset + road_offset + car_position(0));
 		}
@@ -326,7 +327,7 @@ void *processing_thread_function(void* unsused)
 
 void pwm_servo_right(int h_r){
 	int static local_hr = 0;
-	if(abs(h_r - local_hr) > 5){
+	if(abs(h_r - local_hr) > 2){
 		local_hr = h_r;
 		pwm_right.high();
 		usleep(local_hr);
@@ -337,7 +338,7 @@ void pwm_servo_right(int h_r){
 
 void pwm_servo_left(int h_l){
 	int static local_hl = 0;
-	if(abs(h_l - local_hl) > 5){
+	if(abs(h_l - local_hl) > 2){
 		local_hl = h_l;
 		pwm_left.high();
 		usleep(local_hl);
