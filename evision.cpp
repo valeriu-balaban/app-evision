@@ -367,7 +367,7 @@ int car_position(int y_position){
 	} else {
 		return 0;
 	}
-}`
+}
 
 void add_info(int fps){
 	// white canvas
