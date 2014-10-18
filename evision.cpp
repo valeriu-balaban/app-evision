@@ -166,7 +166,8 @@ bool get_obstacle(
 
 void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 	std::vector<std::vector<cv::Point>> road(2);
-	std::vector<cv::Vec4i> hierarchy;	
+	std::vector<cv::Vec4i> hierarchy;
+	int led_red_status = 0;	
 	
 	cv::findContours(threshold_frame, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);		
 	if(contours.size() > 1){
@@ -232,13 +233,19 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 			// obtacle on the road: draw rectangle, adjust pwm for servo, blink led
 			cv::rectangle(cam_frame, obstacle, cv::Scalar(0, 0, 255));
 			pwm_servo_right(high_right + servo_offset + road_offset + obstacle_position(obstacle.y + (obstacle.height / 2)));
-			if(time(NULL) & 1){
+			
+			led_red_status ++;
+			
+			if(led_red_status < 2){
 				led_R.high();
 			} else {
 				led_R.low();
+				if(led_red_status == 4)
+					led_red_status = 0;				
 			}
 		} else {
 			led_R.low();
+			led_red_status = 0;
 		}
 		
 		if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
