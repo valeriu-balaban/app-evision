@@ -229,9 +229,16 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 		
 		cv::Rect obstacle;
 		if(get_obstacle(contour_indexes[0], contours, hierarchy, obstacle)){
+			// obtacle on the road: draw rectangle, adjust pwm for servo, blink led
 			cv::rectangle(cam_frame, obstacle, cv::Scalar(0, 0, 255));
-			//std::cout << cv::Point(obstacle.x + (obstacle.width / 2), obstacle.y + (obstacle.height / 2)) << std::endl;
 			pwm_servo_right(high_right + servo_offset + road_offset + obstacle_position(obstacle.y + (obstacle.height / 2)));
+			if(time(NULL) & 1){
+				led_R.high();
+			} else {
+				led_R.low();
+			}
+		} else {
+			led_R.low();
 		}
 		
 		if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
