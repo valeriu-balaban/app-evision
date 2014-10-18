@@ -233,7 +233,7 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 			// obtacle on the road: draw rectangle, adjust pwm for servo, blink led
 			cv::rectangle(cam_frame, obstacle, cv::Scalar(0, 0, 255));
 			pwm_servo_right(high_right + servo_offset + road_offset + obstacle_position(obstacle.y + (obstacle.height / 2)));
-			
+
 			led_red_status ++;
 			
 			if(led_red_status < 2){
