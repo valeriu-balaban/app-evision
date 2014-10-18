@@ -235,8 +235,7 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 		}
 		
 		if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
-			cv::rectangle(cam_frame, obstacle, cv::Scalar(2
-			55, 0, 255));
+			cv::rectangle(cam_frame, obstacle, cv::Scalar(255, 0, 255));
 	   	
    			pwm_servo_left(high_left + servo_offset + road_offset + car_position(0));
 		}
