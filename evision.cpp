@@ -8,7 +8,7 @@
 // Global variables
 GPIO pwm_right(1, "out"), pwm_left(3, "out"); // led_right(2 , "out");
 GPIO led_front(5, "out"), led_R(4, "out"), start(7 ,"out"); // 0,2,6 bulit
-int high_right = 600, high_left = 600, period = 20000; //PWM high time in us
+int high_right = 440, high_left = 350, period = 20000; //PWM high time in us
 int top_edge = 50, servo_offset = 0, road_offset = 0;
 
 // GUI globals
@@ -241,7 +241,7 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 		
 		if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
 			cv::rectangle(cam_frame, obstacle, cv::Scalar(255, 0, 255));
-	   	
+	   		std::cout << obstacle.y + (obstacle.height / 2) << std::endl;
    			pwm_servo_left(high_left + servo_offset + road_offset + car_position(0));
 		} else {
 			pwm_servo_left(high_left + servo_offset + (road_offset << 1));
