@@ -241,8 +241,8 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 		
 		if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
 			cv::rectangle(cam_frame, obstacle, cv::Scalar(255, 0, 255));
-	   		std::cout << obstacle.y + (obstacle.height / 2) << std::endl;
-   			pwm_servo_left(high_left + servo_offset + road_offset + car_position(0));
+	   		// std::cout << obstacle.y + (obstacle.height / 2) << std::endl;
+   			pwm_servo_left(high_left + servo_offset + road_offset + car_position(obstacle.y + (obstacle.height / 2)));
 		} else {
 		
 			pwm_servo_left(high_left + servo_offset + road_offset);
@@ -364,7 +364,7 @@ int obstacle_position(int y_position){
 
 int car_position(int y_position){
 	if(y_position > top_edge){
-		return 1;
+		return int ( 2 * y_position - 120);
 	} else {
 		return 0;
 	}
