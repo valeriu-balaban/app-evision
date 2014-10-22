@@ -8,7 +8,7 @@
 // Global variables
 GPIO pwm_right(1, "out"), pwm_left(3, "out"); // led_right(2 , "out");
 GPIO led_front(5, "out"), led_R(4, "out"), start(7 ,"out"); // 0,2,6 bulit
-int high_right = 440, high_left = 350, period = 20000; //PWM high time in us
+int high_right = 400, high_left = 350, period = 20000; //PWM high time in us
 int top_edge = 50, servo_offset = 0, road_offset = 0;
 
 // GUI globals
@@ -145,11 +145,15 @@ bool get_obstacle(
 	
 	while(start > 0){
 		
-		if(closest == -1){
-			closest = start;
-			found = true;
-		} else if(cv::boundingRect(contours[start]).y > cv::boundingRect(contours[closest]).y){
-			closest = start;
+		// remove noise
+		if(cv::contourArea(contours[start]) > 100){
+			
+			if(closest == -1){
+				closest = start;
+				found = true;
+			} else if(cv::boundingRect(contours[start]).y > cv::boundingRect(contours[closest]).y){
+				closest = start;
+			}
 		}
 
 		start = hierarchy[start][0];
