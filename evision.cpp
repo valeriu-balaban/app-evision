@@ -25,7 +25,7 @@ int settings_show_step = 0;
 int settings_contrast = 0;
 int settings_blur = 1;
 int settings_threshold = 128;
-int settings_servo_offset = 100;
+int settings_servo_offset = 260;
 int settings_road_approx = 5;
 
 // Graphics
@@ -227,12 +227,12 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 			road_offset = (new_road_offset - 150) * 2;
 		}
 		
-		std::cout << road_offset << std::endl;		
+		//std::cout << road_offset << std::endl;		
 		
 		cv::Rect obstacle;
 		if(get_obstacle(contour_indexes[0], contours, hierarchy, obstacle)){
 			// obtacle on the road: draw rectangle, adjust pwm for servo, blink led
-			cv::rectangle(cam_frame, obstacle, cv::Scalar(0, 0, 255));
+			cv::rectangle(cam_frame, obstacle, cv::Scalar(0, 0, 255), 2);
 			pwm_servo_right(high_right + settings_servo_offset + road_offset + obstacle_position(obstacle.y + (obstacle.height / 2)));
 
 			led_R.toggle();
@@ -242,7 +242,7 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 		}
 		
 		if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
-			cv::rectangle(cam_frame, obstacle, cv::Scalar(255, 0, 255));
+			cv::rectangle(cam_frame, obstacle, cv::Scalar(255, 0, 255), 2);
 	   		//std::cout << obstacle.y + (obstacle.height / 2) << std::endl;
    			pwm_servo_left(high_left + settings_servo_offset + road_offset + car_position(obstacle.y + (obstacle.height / 2)));
 		} else {
