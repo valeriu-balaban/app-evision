@@ -27,7 +27,6 @@ int settings_blur = 1;
 int settings_threshold = 128;
 int settings_servo_offset = 500;
 int settings_road_approx = 5;
-int settings_middle_line = 240;
 
 // Graphics
 std::vector<std::vector<cv::Point>> contours;
@@ -67,7 +66,6 @@ int main(int argc, char** argv)
 	cv::createTrackbar("Mean Blur   ", settings_window_name, &settings_blur, 1);
 	cv::createTrackbar("Threshold   ", settings_window_name, &settings_threshold, 255);
 	cv::createTrackbar("Road Approx ", settings_window_name, &settings_road_approx, 30);
-	cv::createTrackbar("Middle Line ", settings_window_name, &settings_middle_line, 320);
 	cv::createTrackbar("Servo Offset", settings_window_name, &settings_servo_offset, 1000);
 	cv::createTrackbar("Servo Right ", settings_window_name, &high_right, 1500);
 	cv::createTrackbar("Servo Left  ", settings_window_name, &high_left, 1500);
@@ -247,7 +245,6 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 			pwm_servo_left(high_left + servo_offset + (road_offset << 1));
 		}
 		
-		cv::line(cam_frame, cv::Point(settings_middle_line, 320), cv::Point(settings_middle_line, top_edge), cv::Scalar(0, 255, 255));
 	}
 }
 
