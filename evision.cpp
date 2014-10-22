@@ -224,7 +224,7 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 		}
 		
 		if((new_road_offset > 50) && (new_road_offset < 250)){
-			road_offset = new_road_offset;
+			road_offset = (new_road_offset - 150) * 2;
 		}
 		
 		std::cout << road_offset << std::endl;		
