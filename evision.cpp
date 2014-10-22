@@ -360,7 +360,7 @@ int obstacle_position(int y_position){
 
 int car_position(int y_position){
 	if(y_position > top_edge){
-		return int ( 120 - 2.5 * y_position);
+		return int ( 120 - 2 * y_position);
 	} else {
 		return 0;
 	}
