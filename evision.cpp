@@ -238,7 +238,7 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 			led_R.toggle();
 		} else {
 			led_R.low();
-			pwm_servo_right(high_right + servo_offset + (road_offset << 1));
+			pwm_servo_right(high_right + servo_offset + road_offset);
 		}
 		
 		if(get_obstacle(contour_indexes[1], contours, hierarchy, obstacle)){
@@ -246,7 +246,7 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 	   		//std::cout << obstacle.y + (obstacle.height / 2) << std::endl;
    			pwm_servo_left(high_left + servo_offset + road_offset + car_position(obstacle.y + (obstacle.height / 2)));
 		} else {
-			pwm_servo_left(high_left + servo_offset + (road_offset << 1));
+			pwm_servo_left(high_left + servo_offset + road_offset);
 		}
 		
 	}
