@@ -8,7 +8,7 @@
 // Global variables
 GPIO pwm_right(1, "out"), pwm_left(3, "out"); // led_right(2 , "out");
 GPIO led_front(5, "out"), led_R(4, "out"), start(7 ,"out"); // 0,2,6 bulit
-int high_right = 400, high_left = 350, period = 20000; //PWM high time in us
+int high_right = 300, high_left = 250, period = 20000; //PWM high time in us
 int top_edge = 50, road_offset = 0;
 
 // GUI globals
@@ -25,7 +25,7 @@ int settings_show_step = 0;
 int settings_contrast = 0;
 int settings_blur = 1;
 int settings_threshold = 128;
-int settings_servo_offset = 500;
+int settings_servo_offset = 100;
 int settings_road_approx = 5;
 
 // Graphics
@@ -227,7 +227,7 @@ void draw_obstacles(cv::Mat &threshold_frame, cv::Mat &cam_frame){
 			road_offset = new_road_offset;
 		}
 		
-		//std::cout << road_offset << std::endl;		
+		std::cout << road_offset << std::endl;		
 		
 		cv::Rect obstacle;
 		if(get_obstacle(contour_indexes[0], contours, hierarchy, obstacle)){
